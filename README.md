@@ -6,7 +6,7 @@ Have MobileNet classify your face for funs and giggles! Will request camera acce
 
 ## Setup
 
-Run `npm install` or `yarn install` and then start a local webserver. Voila!
+Everything is checked in, just start a local webserver.
 
 ## Why is there /data?
 
