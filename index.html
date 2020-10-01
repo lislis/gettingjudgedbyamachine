@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>A refined conversation</title>
+    <script src="node_modules/p5/lib/p5.min.js"></script>
+    <script src="node_modules/ml5/dist/ml5.js"></script>
+    <script src="lib/p5.speech.js"></script>
+    <style>
+     * {
+       box-sizing: border-box;
+     }
+     #loading,
+     #face {
+       font-size: 120px
+     }
+     @keyframes spinning {
+       0% {
+         transform: rotateZ(0deg)
+       },
+       100% {
+         transform: rotateZ(360deg)
+       }
+     }
+     #output {
+       font-size: 40px;
+     }
+     #loading {
+       animation: spinning 2s infinite linear;
+       transform-origin: center
+     }
+     .wrapper {
+       max-width: 400px;
+       margin: auto;
+       padding-top: 10rem;
+       text-align: center;
+       height: calc(100vh - 4rem);
+     }
+     #judge1 {
+       border: none;
+       font-size: 30px;
+       background-color: lightgrey;
+       margin-top: 5rem;
+       padding: 1.3rem 2rem;
+       border-radius: 4px;
+       cursor: pointer;
+     }
+     body {
+       display: flex;
+       flex-direction: column;
+       margin: 0;
+       line-height: 1.35;
+       overflow: hidden;
+     }
+     footer,
+     #output {
+       font-family: sans-serif;
+     }
+     footer {
+       height: 4rem;
+       background-color: lightgrey;
+       font-size: 20px;
+       padding: 0 1rem;
+     }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div id="loading">⏳</div>
+      <div id="face"></div>
+      <div id="output"></div>
+      <button id="judge1" type="button">Judge me</button>
+    </div>
+    <footer><p>My first time getting judged by a machine. Made with ml5.js</p></footer>
+
+    <script>
+     let word2Vec;
+     let mobileNet;
+     let vid;
+     let voice = new p5.Speech(); // speech synthesis object
+     let output;
+     let btn;
+
+     function modelLoaded() {
+       console.log('Wordvec loaded')
+       document.querySelector('#loading').textContent = "⌛"
+     }
+
+     function mobileNetLoaded() {
+       console.log('DarkNet loaded')
+       state = 0
+       btn.style = "display: inline-block"
+       document.querySelector('#loading').style = "display: none"
+       document.querySelector('#face').textContent = "😐"
+     }
+
+     function gotResults(error, results) {
+       if (error) {
+         console.log('error predicting')
+       } else {
+         console.log(results)
+         setTimeout(() => {
+           document.querySelector('#face').textContent = "😬"
+           const thing = results[0].label.split(',')[0]
+           const sentences = ["You're face is like a ",
+                              "You remind me of a ",
+                              "You look like a ",
+                              "Somehow you're like a ",
+                              "When I see your face I think of a ",
+                              "I think of you as a "]
+           //debugger
+           const judgement = sentences[Math.floor(Math.random() * sentences.length)] + thing + ".";
+           voice.speak(judgement)
+           output.textContent = judgement
+         }, 1800)
+
+         /*
+         word2Vec.subtract(["machine", thing])
+                 .then((error,difference) => {
+                   if (error) {
+                     console.log('error in difference')
+                   } else {
+                     word2Vec.add(["human", difference[0].word])
+                   }
+                 })
+                 .then((error,result) => {
+                   if (error) {
+                     console.log("error adding")
+                   } else {
+                     const word = result[0].word
+                     let analogy = thing + "for a machine is like " + word + "to you humans.<br>In case you didn't get that"
+                     output.textContext = analogy
+                   }
+                 })
+         */
+       }
+     }
+
+     function setup() {
+       noCanvas()
+       //createCanvas(600, 400)
+       word2Vec = ml5.word2vec('data/output.json', modelLoaded);
+
+       vid = createCapture(VIDEO)
+       vid.hide()
+
+       mobileNet = ml5.imageClassifier('MobileNet', vid, mobileNetLoaded);
+
+       btn = document.querySelector("#judge1");
+       output = document.querySelector("#output");
+       btn.style = "display: none"
+
+       btn.addEventListener('click', () => {
+         document.querySelector('#face').textContent = "🤔"
+         mobileNet.predict(gotResults)
+       })
+     }
+    </script>
+  </body>
+</html>
